@@ -12,9 +12,12 @@ url = {
 }
 
 # 初始化参数
-KEYWORD = []  # 该元组的条件为&&
-BEGINDATE = "20210818"
-ENDDATE = "20210818"
+KEYWORD = ['一带一路', '成果']  # 该元组的条件为&&
+COLUMN = "both"    # 默认只检索title，修改为both则同时以关键词匹配内容
+CONTENT_KEYWORD = ['成果'];   # 是否给comtent自定义keyword检索，留空则共用KEYWORK变量
+
+BEGINDATE = "20210819"
+ENDDATE = "20210819"
 ROWLINE = 0
 
 # 复制一份article.xls，其实每次就是以新文件覆盖了旧文件
@@ -38,9 +41,9 @@ def writeInFile(content):
     ROWLINE = row + 1
 
 # 在参数content中，匹配元组KEYWORD中的每一个元素，如有某个元素匹配不到，则返回False
-def matchByKeyword(content):
+def matchByKeyword(content, keyword = KEYWORD):
     result = True
-    for item in KEYWORD:
+    for item in keyword:
         if item not in content:
             result = False
     return result
@@ -83,17 +86,19 @@ def getContent(fatherUrl, url):
         title = re.findall(r'<h1class="content_title">(.*?)</h1>', item)
         title = re.findall(r'<title>(.*?)</title>', item)
         title = ''.join(title)
-        titleIsLegal = matchByKeyword(title)
+        titleIsLegal = matchByKeyword(title, KEYWORD)
         if titleIsLegal == False:
             return None
 
         # content条件筛选
-        content = re.findall(
-            r'<divclass="detail"id="js_content">(.*?)</div>', item)
-        content = ''.join(content)
-        contentIsLegal = matchByKeyword(title)
-        if contentIsLegal == False:
-            return None
+        if COLUMN == "both":
+            content = re.findall(
+                r'<divclass="detail"id="js_content">(.*?)</div>', item)
+            content = ''.join(content)
+            keyword = CONTENT_KEYWORD if CONTENT_KEYWORD else KEYWORD
+            contentIsLegal = matchByKeyword(title, keyword)
+            if contentIsLegal == False:
+                return None
 
         # 定义result字典，用于返回给调用函数
         result = {}
