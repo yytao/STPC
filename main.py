@@ -8,16 +8,26 @@ import sys
 # 初始化链接字典
 url = {
     '要闻': "http://chisa.edu.cn/rmtnews1/ssyl/",
-    '时评': "http://chisa.edu.cn/rmtnews1/guandian/"
+    '时评': "http://chisa.edu.cn/rmtnews1/guandian/",
+    '海外': "http://chisa.edu.cn/rmtnews1/haiwai/",
+    '人才': "http://chisa.edu.cn/rmtnews1/rencai/",
+    '综合': "http://chisa.edu.cn/rmtnews1/zonghe/",
+    '原创': "http://chisa.edu.cn/rmtycgj/",
+    '创业': "http://chisa.edu.cn/rmtnews1/chuangye/",
+    '留学': "http://chisa.edu.cn/rmtnews1/chuguo/"
 }
 
-# 初始化参数
-KEYWORD = ['一带一路', '成果']  # 该元组的条件为&&
-COLUMN = "both"    # 默认只检索title，修改为both则同时以关键词匹配内容
-CONTENT_KEYWORD = ['成果'];   # 是否给comtent自定义keyword检索，留空则共用KEYWORK变量
+#url = {
+#    '原创': "http://www.chisa.edu.cn/rmtycgj/",
+#}
 
-BEGINDATE = "20210819"
-ENDDATE = "20210819"
+# 初始化参数
+KEYWORD = []  # 该元组的条件为&&
+COLUMN = ['from']#默认只检索title，新增content或者from
+CONTENT_KEYWORD = ['新华社'];   # 是否给comtent自定义keyword检索，留空则共用KEYWORK变量
+
+BEGINDATE = "20210101"
+ENDDATE = "20211012"
 ROWLINE = 0
 
 # 复制一份article.xls，其实每次就是以新文件覆盖了旧文件
@@ -82,23 +92,35 @@ def getContent(fatherUrl, url):
         item = re.sub('\n', '', item)
         item = re.sub('\s', '', item)
 
-        # title条件筛选
         title = re.findall(r'<h1class="content_title">(.*?)</h1>', item)
         title = re.findall(r'<title>(.*?)</title>', item)
         title = ''.join(title)
-        titleIsLegal = matchByKeyword(title, KEYWORD)
-        if titleIsLegal == False:
-            return None
+        
+        # title条件筛选
+        if 'title' in COLUMN:
+            titleIsLegal = matchByKeyword(title, KEYWORD)
+            if titleIsLegal == False:
+                return None
 
         # content条件筛选
-        if COLUMN == "both":
+        if 'content' in COLUMN:
             content = re.findall(
                 r'<divclass="detail"id="js_content">(.*?)</div>', item)
             content = ''.join(content)
             keyword = CONTENT_KEYWORD if CONTENT_KEYWORD else KEYWORD
-            contentIsLegal = matchByKeyword(title, keyword)
+            contentIsLegal = matchByKeyword(content, keyword)
             if contentIsLegal == False:
                 return None
+
+        if 'from' in COLUMN:
+            fromContent = re.findall(
+                r'<divclass="from">(.*?)</div>', item)
+            fromContent = ''.join(fromContent)
+            keyword = CONTENT_KEYWORD if CONTENT_KEYWORD else KEYWORD
+            fromContentIsLegal = matchByKeyword(fromContent, keyword)
+            if fromContentIsLegal == False:
+                return None
+        
 
         # 定义result字典，用于返回给调用函数
         result = {}
